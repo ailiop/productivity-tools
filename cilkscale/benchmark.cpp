@@ -158,14 +158,15 @@ BenchmarkImpl_t::BenchmarkImpl_t() {
     outf.open(envstr);
 
 #if !SERIAL_TOOL
-  __cilkrts_reducer_register
-    (&timer, sizeof timer, timer_identity, timer_reduce);
+  __cilkrts_hyperobject_register
+    (&timer, sizeof timer, 1, timer_identity, timer_reduce, NULL);
 
   outf_red = new out_reducer((outf.is_open() ? outf : outs));
-  __cilkrts_reducer_register
-    (outf_red, sizeof *outf_red,
+  __cilkrts_hyperobject_register
+    (outf_red, sizeof *outf_red, 1,
      &cilk::ostream_view<char, std::char_traits<char>>::identity,
-     &cilk::ostream_view<char, std::char_traits<char>>::reduce);
+     &cilk::ostream_view<char, std::char_traits<char>>::reduce,
+     NULL);
 #endif
 
   start.gettime();
@@ -179,10 +180,10 @@ BenchmarkImpl_t::~BenchmarkImpl_t() {
     outf.close();
 
 #if !SERIAL_TOOL
-  __cilkrts_reducer_unregister(outf_red);
+  __cilkrts_hyperobject_unregister(outf_red);
   delete outf_red;
   outf_red = nullptr;
-  __cilkrts_reducer_unregister(&timer);
+  __cilkrts_hyperobject_unregister(&timer);
 #endif
 }
 
